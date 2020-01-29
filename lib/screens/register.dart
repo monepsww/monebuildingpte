@@ -1,8 +1,9 @@
-import 'dart:ffi';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:monebuilding/utility/my_constant.dart';
 import 'package:monebuilding/utility/my_style.dart';
 import 'package:monebuilding/utility/normal_dialog.dart';
 
@@ -187,7 +188,40 @@ class _RegisterState extends State<Register> {
     );
   }
 
-  Future<void> processUploadAvatar() async {}
+// Upload Image
+  Future<void> processUploadAvatar() async {
+    try {
+      Map<String, dynamic> map = Map();
+      map['file'] = UploadFileInfo(file, '$name.jpg');
+      FormData formData = FormData.from(map);
+
+      // ถ้าทำงานสำเสร็จจะ end ถ้าไม่จะไป catch
+      await Dio()
+          .post(MyConstant().urlAPIsaveFile, data: formData)
+          .then((response) {
+        print('response = $response');
+        processInsertData();
+      });
+    } catch (e) {}
+  }
+
+// เพิ่มฐานข้อมูล
+  Future<void> processInsertData() async {
+    // path Image
+    String avatar = 'https://www.androidthai.in.th/pte/avatarMone/$name.jpg';
+    // path Data
+    String url =
+        'https://www.androidthai.in.th/pte/addUserMone.php?isAdd=true&name=$name&user=$user&password=$password&avatar=$avatar';
+
+    await Dio().get(url).then((response) {
+      if (response.toString() == 'true') {
+        // มาจากไหน กลับไปตรงนั้น ถอยหลังกลับ 1 ครั้ง เหมือน กดปุ่มกลับ บนมุมซ้าย
+        Navigator.of(context).pop();
+      } else {
+        normalDialog(context, 'Error', 'Again Please');
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
